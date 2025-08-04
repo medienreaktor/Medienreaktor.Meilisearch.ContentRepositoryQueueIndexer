@@ -15,15 +15,9 @@ namespace Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Command;
 
 use Doctrine\Common\Collections\ArrayCollection;
 
-use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Driver\NodeTypeMappingBuilderInterface;
-use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception\ConfigurationException;
-use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
-use Flowpack\ElasticSearch\Domain\Model\Mapping;
-
 use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeDataRepository;
 use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\IndexingJob;
-use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\LoggerTrait;
-//use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\UpdateAliasJob;
+
 use Flowpack\JobQueue\Common\Exception;
 use Flowpack\JobQueue\Common\Job\JobManager;
 use Flowpack\JobQueue\Common\Queue\QueueManager;
@@ -72,12 +66,6 @@ class NodeIndexQueueCommandController extends CommandController
     protected $persistenceManager;
 
     /**
-     * @var NodeTypeMappingBuilderInterface
-     * @Flow\Inject
-     */
-    protected $nodeTypeMappingBuilder;
-
-    /**
      * @var NodeDataRepository
      * @Flow\Inject
      */
@@ -113,17 +101,12 @@ class NodeIndexQueueCommandController extends CommandController
      * @param string $workspace
      * @throws Exception
      * @throws StopCommandException
-     * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
-     * @throws \Flowpack\ElasticSearch\Exception
      * @throws \Exception
      */
     public function buildCommand(string $workspace = null): void
     {
-        $indexPostfix = (string)time();
-        $this->updateMapping($indexPostfix);
 
         $this->outputLine();
-        $this->outputLine('<b>Indexing on %s ...</b>', [$indexPostfix]);
 
         $pendingJobs = $this->queueManager->getQueue(self::BATCH_QUEUE_NAME)->countReady();
         if ($pendingJobs !== 0) {
@@ -135,18 +118,12 @@ class NodeIndexQueueCommandController extends CommandController
             foreach ($this->workspaceRepository->findAll() as $workspace) {
                 $workspace = $workspace->getName();
                 $this->outputLine();
-                $this->indexWorkspace($workspace, $indexPostfix);
+                $this->indexWorkspace($workspace);
             }
         } else {
             $this->outputLine();
-            $this->indexWorkspace($workspace, $indexPostfix);
+            $this->indexWorkspace($workspace);
         }
-
-        $combinations = new ArrayCollection($this->contentDimensionCombinator->getAllAllowedCombinations());
-        $combinations->map(function (array $dimensionValues) use ($indexPostfix) {
-            //$updateAliasJob = new UpdateAliasJob($indexPostfix, $dimensionValues);
-            //$this->jobManager->queue(self::BATCH_QUEUE_NAME, $updateAliasJob);
-        });
 
         $this->outputLine('Indexing jobs created for queue %s with success ...', [self::BATCH_QUEUE_NAME]);
         $this->outputSystemReport();
@@ -270,10 +247,9 @@ class NodeIndexQueueCommandController extends CommandController
 
     /**
      * @param string $workspaceName
-     * @param string $indexPostfix
      * @throws \Exception
      */
-    protected function indexWorkspace(string $workspaceName, string $indexPostfix): void
+    protected function indexWorkspace(string $workspaceName): void
     {
         $this->outputLine('<info>++</info> Indexing %s workspace', [$workspaceName]);
         $nodeCounter = 0;
@@ -302,7 +278,7 @@ class NodeIndexQueueCommandController extends CommandController
                 break;
             }
 
-            $indexingJob = new IndexingJob($indexPostfix, $workspaceName, $jobData);
+            $indexingJob = new IndexingJob($workspaceName, $jobData);
             $this->jobManager->queue(self::BATCH_QUEUE_NAME, $indexingJob);
             $this->output('.');
             $offset += $this->batchSize;
@@ -311,42 +287,5 @@ class NodeIndexQueueCommandController extends CommandController
         $this->outputLine();
         $this->outputLine("\nNumber of Nodes to be indexed in workspace '%s': %d", [$workspaceName, $nodeCounter]);
         $this->outputLine();
-    }
-
-    /**
-     * Update Index Mapping
-     *
-     * @param string $indexPostfix
-     * @return void
-     */
-    protected function updateMapping(string $indexPostfix): void
-    {
-        $combinations = new ArrayCollection($this->contentDimensionCombinator->getAllAllowedCombinations());
-        $combinations->map(function (array $dimensionValues) use ($indexPostfix) {
-            $this->nodeIndexer->setDimensions($dimensionValues);
-            $this->nodeIndexer->setIndexNamePostfix($indexPostfix);
-
-            if (!$this->nodeIndexer->getIndex()->exists()) {
-                $this->nodeIndexer->getIndex()->create();
-            }
-            $nodeTypeMappingCollection = $this->nodeTypeMappingBuilder->buildMappingInformation($this->nodeIndexer->getIndex());
-
-            $properties = [];
-            $dynamicTemplates = [];
-            foreach ($nodeTypeMappingCollection as $nodeTypeMapping) {
-                /** @var Mapping $nodeTypeMapping */
-                $properties[] = $nodeTypeMapping->asArray()['properties'];
-                $dynamicTemplates[] = $nodeTypeMapping->asArray()['dynamic_templates'];
-            }
-
-            $combinedMappings = [
-                'dynamic_templates' => array_merge([], ...$dynamicTemplates),
-                'properties' => array_merge([], ...$properties),
-            ];
-
-            $this->nodeIndexer->getIndex()->request('PUT', '/_mapping', [], json_encode($combinedMappings));
-
-            $this->logger->info(sprintf('Mapping updated for index %s', $this->nodeIndexer->getIndexName()), LogEnvironment::fromMethodName(__METHOD__));
-        });
     }
 }

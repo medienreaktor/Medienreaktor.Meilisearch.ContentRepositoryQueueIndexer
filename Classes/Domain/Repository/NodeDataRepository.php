@@ -15,7 +15,6 @@ namespace Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Domain\Reposit
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Internal\Hydration\IterableResult;
-use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Service\NodeTypeIndexingConfiguration;
 use Neos\ContentRepository\Domain\Model\NodeData;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Persistence\Repository;
@@ -26,12 +25,6 @@ use Neos\Flow\Persistence\Repository;
 class NodeDataRepository extends Repository
 {
     public const ENTITY_CLASSNAME = NodeData::class;
-
-    /**
-     * @Flow\Inject
-     * @var NodeTypeIndexingConfiguration
-     */
-    protected $nodeTypeIndexingConfiguration;
 
     /**
      * @Flow\Inject
@@ -63,13 +56,13 @@ class NodeDataRepository extends Repository
             $queryBuilder->andWhere($queryBuilder->expr()->gt('n.Persistence_Object_Identifier', $queryBuilder->expr()->literal($lastPersistenceObjectIdentifier)));
         }
 
-        $excludedNodeTypes = array_keys(array_filter($this->nodeTypeIndexingConfiguration->getIndexableConfiguration(), static function ($value) {
-            return !$value;
-        }));
+        // $excludedNodeTypes = array_keys(array_filter($this->nodeTypeIndexingConfiguration->getIndexableConfiguration(), static function ($value) {
+        //     return !$value;
+        // }));
 
-        if (!empty($excludedNodeTypes)) {
-            $queryBuilder->andWhere($queryBuilder->expr()->notIn('n.nodeType', $excludedNodeTypes));
-        }
+        // if (!empty($excludedNodeTypes)) {
+        //     $queryBuilder->andWhere($queryBuilder->expr()->notIn('n.nodeType', $excludedNodeTypes));
+        // }
 
         return $queryBuilder->getQuery()->iterate();
     }

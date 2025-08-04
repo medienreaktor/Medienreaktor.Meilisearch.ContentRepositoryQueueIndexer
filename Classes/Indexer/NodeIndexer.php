@@ -13,7 +13,7 @@ namespace Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Indexer;
  * source code.
  */
 
-use Flowpack\ElasticSearch\ContentRepositoryAdaptor;
+use Medienreaktor\Meilisearch\Indexer\NodeIndexer;
 use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Command\NodeIndexQueueCommandController;
 use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\IndexingJob;
 use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\RemovalJob;
@@ -21,14 +21,19 @@ use Flowpack\JobQueue\Common\Job\JobManager;
 use Neos\ContentRepository\Domain\Model\NodeInterface;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
+use Medienreaktor\Meilisearch\Service\DimensionsService;
+use Neos\Neos\Controller\CreateContentContextTrait;
+
 
 /**
  * NodeIndexer for use in batch jobs
  *
  * @Flow\Scope("singleton")
  */
-class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
+class NodeJobIndexer extends NodeIndexer
 {
+    use CreateContentContextTrait;
+
     /**
      * @var JobManager
      * @Flow\Inject
@@ -48,9 +53,15 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
     protected $enableLiveAsyncIndexing;
 
     /**
+     * @var DimensionsService
+     * @Flow\Inject
+     */
+    protected $dimensionService;
+
+    /**
      * @param NodeInterface $node
      * @param string|null $targetWorkspaceName In case indexing is triggered during publishing, a target workspace name will be passed in
-     * @throws ContentRepositoryAdaptor\Exception
+     * @throws \Exception
      */
     public function indexNode(NodeInterface $node, $targetWorkspaceName = null): void
     {
@@ -74,7 +85,7 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
             }
         }
 
-        $indexingJob = new IndexingJob($this->indexNamePostfix, $targetWorkspaceName, $this->nodeAsArray($node));
+        $indexingJob = new IndexingJob($targetWorkspaceName, $this->nodeAsArray($node));
         $this->jobManager->queue(NodeIndexQueueCommandController::LIVE_QUEUE_NAME, $indexingJob);
     }
 
@@ -108,7 +119,7 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
         $targetWorkspaceName = $targetWorkspaceName ?? $node->getWorkspace()->getName();
 
         if (array_filter($dimensionCombinations) === []) {
-            $removalJob = new RemovalJob($this->indexNamePostfix, $targetWorkspaceName, $this->nodeAsArray($node));
+            $removalJob = new RemovalJob($targetWorkspaceName, $this->nodeAsArray($node));
             $this->jobManager->queue(NodeIndexQueueCommandController::LIVE_QUEUE_NAME, $removalJob);
         } else {
             foreach ($dimensionCombinations as $combination) {
@@ -127,7 +138,7 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
                     'dimensions' => $combination
                 ];
 
-                $removalJob = new RemovalJob($this->indexNamePostfix, $targetWorkspaceName, [$fakeNodeArray]);
+                $removalJob = new RemovalJob($targetWorkspaceName, [$fakeNodeArray]);
                 $this->jobManager->queue(NodeIndexQueueCommandController::LIVE_QUEUE_NAME, $removalJob);
             }
         }
@@ -152,4 +163,5 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
             ]
         ];
     }
+
 }

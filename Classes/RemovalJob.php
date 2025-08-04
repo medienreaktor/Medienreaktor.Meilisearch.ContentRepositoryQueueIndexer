@@ -43,51 +43,48 @@ class RemovalJob extends AbstractIndexingJob
      */
     public function execute(QueueInterface $queue, Message $message): bool
     {
-        $this->nodeIndexer->withBulkProcessing(function () {
-            $numberOfNodes = count($this->nodes);
-            $startTime = microtime(true);
-            foreach ($this->nodes as $node) {
-                /** @var NodeData $nodeData */
-                $nodeData = $this->nodeDataRepository->findByIdentifier($node['persistenceObjectIdentifier']);
+        $numberOfNodes = count($this->nodes);
+        $startTime = microtime(true);
+        foreach ($this->nodes as $node) {
+            /** @var NodeData $nodeData */
+            $nodeData = $this->nodeDataRepository->findByIdentifier($node['persistenceObjectIdentifier']);
 
-                // Skip this iteration if the nodedata can not be fetched (deleted node)
-                if (!$nodeData instanceof NodeData) {
-                    try {
-                        $nodeData = $this->fakeNodeDataFactory->createFromPayload($node);
-                    } catch (Exception $exception) {
-                        $message = $this->throwableStorage->logThrowable($exception);
-                        $this->logger->error(sprintf('Node data of node %s could not be loaded or faked: %s"', $node['identifier'], $message), LogEnvironment::fromMethodName(__METHOD__));
+            // Skip this iteration if the nodedata can not be fetched (deleted node)
+            if (!$nodeData instanceof NodeData) {
+                try {
+                    $nodeData = $this->fakeNodeDataFactory->createFromPayload($node);
+                } catch (Exception $exception) {
+                    $message = $this->throwableStorage->logThrowable($exception);
+                    $this->logger->error(sprintf('Node data of node %s could not be loaded or faked: %s"', $node['identifier'], $message), LogEnvironment::fromMethodName(__METHOD__));
 
-                        continue;
-                    }
-                }
-
-                $context = $this->contextFactory->create([
-                    'workspaceName' => $this->targetWorkspaceName ?: $nodeData->getWorkspace()->getName(),
-                    'invisibleContentShown' => true,
-                    'removedContentShown' => true,
-                    'inaccessibleContentShown' => false,
-                    'dimensions' => $node['dimensions']
-                ]);
-                $currentNode = $this->nodeFactory->createFromNodeData($nodeData, $context);
-
-                // Skip this iteration if the node can not be fetched from the current context
-                if (!$currentNode instanceof NodeInterface) {
-                    $this->logger->info(sprintf('Node %s could not be processed', $node['identifier']), LogEnvironment::fromMethodName(__METHOD__));
                     continue;
                 }
-
-                $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
-                $this->logger->info(sprintf('Removed node %s', $currentNode->getIdentifier()), LogEnvironment::fromMethodName(__METHOD__));
-
-                $this->nodeIndexer->removeNode($currentNode, $this->targetWorkspaceName);
             }
 
-            $this->nodeIndexer->flush();
-            $duration = microtime(true) - $startTime;
-            $rate = $numberOfNodes / $duration;
-            $this->logger->info(sprintf('Removed %s nodes in %s seconds (%s nodes per second)', $numberOfNodes, $duration, $rate), LogEnvironment::fromMethodName(__METHOD__));
-        });
+            $context = $this->contextFactory->create([
+                'workspaceName' => $this->targetWorkspaceName ?: $nodeData->getWorkspace()->getName(),
+                'invisibleContentShown' => true,
+                'removedContentShown' => true,
+                'inaccessibleContentShown' => false,
+                'dimensions' => $node['dimensions']
+            ]);
+            $currentNode = $this->nodeFactory->createFromNodeData($nodeData, $context);
+
+            // Skip this iteration if the node can not be fetched from the current context
+            if (!$currentNode instanceof NodeInterface) {
+                $this->logger->info(sprintf('Node %s could not be processed', $node['identifier']), LogEnvironment::fromMethodName(__METHOD__));
+                continue;
+            }
+
+            $this->logger->info(sprintf('Removed node %s', $currentNode->getIdentifier()), LogEnvironment::fromMethodName(__METHOD__));
+
+            $this->nodeIndexer->removeNode($currentNode, $this->targetWorkspaceName);
+        }
+
+        $this->nodeIndexer->flush();
+        $duration = microtime(true) - $startTime;
+        $rate = $numberOfNodes / $duration;
+        $this->logger->info(sprintf('Removed %s nodes in %s seconds (%s nodes per second)', $numberOfNodes, $duration, $rate), LogEnvironment::fromMethodName(__METHOD__));
 
         return true;
     }

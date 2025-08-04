@@ -34,44 +34,41 @@ class IndexingJob extends AbstractIndexingJob
      */
     public function execute(QueueInterface $queue, Message $message): bool
     {
-        $this->nodeIndexer->withBulkProcessing(function () {
-            $numberOfNodes = count($this->nodes);
-            $startTime = microtime(true);
 
-            foreach ($this->nodes as $node) {
-                /** @var NodeData $nodeData */
-                $nodeData = $this->nodeDataRepository->findByIdentifier($node['persistenceObjectIdentifier']);
+        $numberOfNodes = count($this->nodes);
+        $startTime = microtime(true);
 
-                // Skip this iteration if the nodedata can not be fetched (deleted node)
-                if (!$nodeData instanceof NodeData) {
-                    $this->logger->notice(sprintf('Node data of node %s could not be loaded. Node might be deleted."', $node['identifier']), LogEnvironment::fromMethodName(__METHOD__));
-                    continue;
-                }
+        foreach ($this->nodes as $node) {
+            /** @var NodeData $nodeData */
+            $nodeData = $this->nodeDataRepository->findByIdentifier($node['persistenceObjectIdentifier']);
 
-                $context = $this->contextFactory->create([
-                    'workspaceName' => $this->targetWorkspaceName ?: $nodeData->getWorkspace()->getName(),
-                    'invisibleContentShown' => true,
-                    'inaccessibleContentShown' => false,
-                    'dimensions' => $node['dimensions']
-                ]);
-                $currentNode = $this->nodeFactory->createFromNodeData($nodeData, $context);
-
-                // Skip this iteration if the node can not be fetched from the current context
-                if (!$currentNode instanceof NodeInterface) {
-                    $this->logger->warning(sprintf('Node %s could not be created from node data"', $node['identifier']), LogEnvironment::fromMethodName(__METHOD__));
-                    continue;
-                }
-
-                $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
-                $this->nodeIndexer->setDimensions($node['dimensions']);
-                $this->nodeIndexer->indexNode($currentNode, $this->targetWorkspaceName);
+            // Skip this iteration if the nodedata can not be fetched (deleted node)
+            if (!$nodeData instanceof NodeData) {
+                $this->logger->notice(sprintf('Node data of node %s could not be loaded. Node might be deleted."', $node['identifier']), LogEnvironment::fromMethodName(__METHOD__));
+                continue;
             }
 
-            $this->nodeIndexer->flush();
-            $duration = microtime(true) - $startTime;
-            $rate = $numberOfNodes / $duration;
-            $this->logger->info(sprintf('Indexed %s nodes in %s seconds (%s nodes per second)', $numberOfNodes, $duration, $rate), LogEnvironment::fromMethodName(__METHOD__));
-        });
+            $context = $this->contextFactory->create([
+                'workspaceName' => $this->targetWorkspaceName ?: $nodeData->getWorkspace()->getName(),
+                'invisibleContentShown' => true,
+                'inaccessibleContentShown' => false,
+                'dimensions' => $node['dimensions']
+            ]);
+            $currentNode = $this->nodeFactory->createFromNodeData($nodeData, $context);
+
+            // Skip this iteration if the node can not be fetched from the current context
+            if (!$currentNode instanceof NodeInterface) {
+                $this->logger->warning(sprintf('Node %s could not be created from node data"', $node['identifier']), LogEnvironment::fromMethodName(__METHOD__));
+                continue;
+            }
+
+            $this->nodeIndexer->indexNode($currentNode, $this->targetWorkspaceName);
+        }
+
+        $this->nodeIndexer->flush();
+        $duration = microtime(true) - $startTime;
+        $rate = $numberOfNodes / $duration;
+        $this->logger->info(sprintf('Indexed %s nodes in %s seconds (%s nodes per second)', $numberOfNodes, $duration, $rate), LogEnvironment::fromMethodName(__METHOD__));
 
         return true;
     }

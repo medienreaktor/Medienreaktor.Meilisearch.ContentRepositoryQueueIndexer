@@ -11,7 +11,7 @@ namespace Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer;
  * source code.
  */
 
-use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
+use Medienreaktor\Meilisearch\Indexer\NodeIndexer;
 use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeDataRepository;
 use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Domain\Service\FakeNodeDataFactory;
 use Flowpack\JobQueue\Common\Job\JobInterface;
@@ -71,26 +71,19 @@ abstract class AbstractIndexingJob implements JobInterface
     protected $targetWorkspaceName;
 
     /**
-     * @var string
-     */
-    protected $indexPostfix;
-
-    /**
      * @var array
      */
     protected $nodes = [];
 
     /**
-     * @param string $indexPostfix
      * @param string $targetWorkspaceName In case indexing is triggered during publishing, a target workspace name will be passed in
      * @param array $nodes
      * @throws \Exception
      */
-    public function __construct($indexPostfix, $targetWorkspaceName, array $nodes)
+    public function __construct($targetWorkspaceName, array $nodes)
     {
         $this->identifier = Algorithms::generateRandomString(24);
         $this->targetWorkspaceName = $targetWorkspaceName;
-        $this->indexPostfix = $indexPostfix;
         $this->nodes = $nodes;
     }
 
