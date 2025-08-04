@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Command;
 
 /*
- * This file is part of the Flowpack.ElasticSearch.ContentRepositoryQueueIndexer package.
+ * This file is part of the Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer package.
  *
  * (c) Contributors of the Neos Project - www.neos.io
  *
@@ -17,6 +17,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeDataRepository;
 use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\IndexingJob;
+
+use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Indexer\NodeJobIndexer as NodeIndexer;
 
 use Flowpack\JobQueue\Common\Exception;
 use Flowpack\JobQueue\Common\Job\JobManager;
@@ -38,8 +40,8 @@ use Psr\Log\LoggerInterface;
  */
 class NodeIndexQueueCommandController extends CommandController
 {
-    protected const BATCH_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer';
-    public const LIVE_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live';
+    protected const BATCH_QUEUE_NAME = 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer';
+    public const LIVE_QUEUE_NAME = 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer.Live';
 
     /**
      * @Flow\Inject

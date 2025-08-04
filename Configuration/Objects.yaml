@@ -1,2 +1,12 @@
 Neos\ContentRepository\Search\Indexer\NodeIndexerInterface:
-  className: Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Indexer\NodeIndexer
+  className: Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Indexer\NodeJobIndexer
+
+Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Indexer\NodeJobIndexer:
+  properties:
+    indexClient:
+      object:
+        factoryObjectName: Medienreaktor\Meilisearch\Factory\IndexFactory
+        factoryMethodName: create
+        arguments:
+          1:
+            value: 'neos'

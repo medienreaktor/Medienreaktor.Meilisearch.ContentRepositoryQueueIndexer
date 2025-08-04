@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Indexer;
 
 /*
- * This file is part of the Flowpack.ElasticSearch.ContentRepositoryQueueIndexer package.
+ * This file is part of the Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer package.
  *
  * (c) Contributors of the Neos Project - www.neos.io
  *
@@ -21,7 +21,7 @@ use Flowpack\JobQueue\Common\Job\JobManager;
 use Neos\ContentRepository\Domain\Model\NodeInterface;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
-use Medienreaktor\Meilisearch\Service\DimensionsService;
+use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Domain\Service\DimensionsService;
 use Neos\Neos\Controller\CreateContentContextTrait;
 
 
@@ -93,7 +93,7 @@ class NodeJobIndexer extends NodeIndexer
      * @param NodeInterface $node
      * @param string|null $targetWorkspaceName In case indexing is triggered during publishing, a target workspace name will be passed in
      * @throws ContentRepositoryAdaptor\Exception
-     * @throws \Flowpack\ElasticSearch\Exception
+     * @throws \Exception
      * @throws \Neos\Flow\Persistence\Exception\IllegalObjectTypeException
      * @throws \Neos\Utility\Exception\FilesException
      */

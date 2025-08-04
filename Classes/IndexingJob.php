@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer;
 
 /*
- * This file is part of the Flowpack.ElasticSearch.ContentRepositoryQueueIndexer package.
+ * This file is part of the Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer package.
  *
  * (c) Contributors of the Neos Project - www.neos.io
  *
@@ -20,7 +20,7 @@ use Neos\ContentRepository\Domain\Model\NodeInterface;
 use Neos\Flow\Log\Utility\LogEnvironment;
 
 /**
- * Elasticsearch Node Indexing Job
+ * Meilisearch Node Indexing Job
  */
 class IndexingJob extends AbstractIndexingJob
 {
@@ -80,6 +80,6 @@ class IndexingJob extends AbstractIndexingJob
      */
     public function getLabel(): string
     {
-        return sprintf('Elasticsearch Indexing Job (%s)', $this->getIdentifier());
+        return sprintf('Meilisearch Indexing Job (%s)', $this->getIdentifier());
     }
 }

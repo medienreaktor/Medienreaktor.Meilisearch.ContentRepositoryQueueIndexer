@@ -2,7 +2,7 @@
 namespace Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer;
 
 /*
- * This file is part of the Flowpack.ElasticSearch.ContentRepositoryQueueIndexer package.
+ * This file is part of the Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer package.
  *
  * (c) Contributors of the Neos Project - www.neos.io
  *

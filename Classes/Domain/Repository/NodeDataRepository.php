@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Domain\Repository;
 
 /*
- * This file is part of the Flowpack.ElasticSearch.ContentRepositoryQueueIndexer package.
+ * This file is part of the Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer package.
  *
  * (c) Contributors of the Neos Project - www.neos.io
  *
@@ -37,7 +37,7 @@ class NodeDataRepository extends Repository
      * @param string|null $lastPersistenceObjectIdentifier
      * @param int $maxResults
      * @return IterableResult
-     * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
+     * @throws \Exception
      */
     public function findAllBySiteAndWorkspace(string $workspaceName, string $lastPersistenceObjectIdentifier = null, int $maxResults = 1000): IterableResult
     {

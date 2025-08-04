@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Medienreaktor\Meilisearch\Service;
+namespace Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Domain\Service;
 
 /*
- * This file is part of the Flowpack.ElasticSearch.ContentRepositoryAdaptor package.
+ * This file is part of the Medienreaktor.Meilisearch.ContentRepositoryAdaptor package.
  *
  * (c) Contributors of the Neos Project - www.neos.io
  *

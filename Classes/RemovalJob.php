@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer;
 
 /*
- * This file is part of the Flowpack.ElasticSearch.ContentRepositoryQueueIndexer package.
+ * This file is part of the Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer package.
  *
  * (c) Contributors of the Neos Project - www.neos.io
  *
@@ -14,7 +14,6 @@ namespace Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer;
  */
 
 use Neos\Flow\Annotations as Flow;
-use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception;
 use Flowpack\JobQueue\Common\Queue\Message;
 use Flowpack\JobQueue\Common\Queue\QueueInterface;
 use Neos\ContentRepository\Domain\Model\NodeData;
@@ -23,7 +22,7 @@ use Neos\Flow\Log\ThrowableStorageInterface;
 use Neos\Flow\Log\Utility\LogEnvironment;
 
 /**
- * Elasticsearch Node Removal Job
+ * Meilisearch Node Removal Job
  */
 class RemovalJob extends AbstractIndexingJob
 {
@@ -96,6 +95,6 @@ class RemovalJob extends AbstractIndexingJob
      */
     public function getLabel(): string
     {
-        return sprintf('Elasticsearch Removal Job (%s)', $this->getIdentifier());
+        return sprintf('Meilisearch Removal Job (%s)', $this->getIdentifier());
     }
 }
