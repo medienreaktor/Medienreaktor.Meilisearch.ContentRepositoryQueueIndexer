@@ -1,5 +1,5 @@
 {
-  "name": "flowpack/elasticsearch-contentrepositoryqueueindexer",
+  "name": "medienreaktor/meilisearch-contentrepositoryqueueindexer",
   "type": "neos-package",
   "description": "Neos CMS Elasticsearch indexer based on a job queue",
   "license": "MIT",
