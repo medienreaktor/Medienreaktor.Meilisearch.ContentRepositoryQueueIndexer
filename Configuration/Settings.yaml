@@ -1,5 +1,5 @@
-Flowpack:
-  ElasticSearch:
+Medienreaktor:
+  Meilisearch:
     ContentRepositoryQueueIndexer:
       enableLiveAsyncIndexing: true
       # Change size of single batch jobs via this setting
@@ -11,17 +11,18 @@ Flowpack:
 
       # Run a nodeindex:cleanup after the node switching job switched the index
       cleanupIndicesAfterSuccessfulSwitch: true
+Flowpack:
   JobQueue:
     Common:
       queues:
-        'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer':
-          preset: 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer'
+        'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer':
+          preset: 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer'
 
-        'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live':
-          preset: 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live'
+        'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer.Live':
+          preset: 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer.Live'
 
       presets:
-        'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer':
+        'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer':
           className: 'Flowpack\JobQueue\Common\Queue\FakeQueue'
-        'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live':
+        'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer.Live':
           className: 'Flowpack\JobQueue\Common\Queue\FakeQueue'

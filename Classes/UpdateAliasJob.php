@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer;
+namespace Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer;
 
 /*
  * This file is part of the Flowpack.ElasticSearch.ContentRepositoryQueueIndexer package.
