@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Indexer;
+namespace Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Indexer;
 
 /*
  * This file is part of the Flowpack.ElasticSearch.ContentRepositoryQueueIndexer package.
@@ -14,9 +14,9 @@ namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Indexer;
  */
 
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor;
-use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Command\NodeIndexQueueCommandController;
-use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\IndexingJob;
-use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\RemovalJob;
+use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Command\NodeIndexQueueCommandController;
+use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\IndexingJob;
+use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\RemovalJob;
 use Flowpack\JobQueue\Common\Job\JobManager;
 use Neos\ContentRepository\Domain\Model\NodeInterface;
 use Neos\Flow\Annotations as Flow;

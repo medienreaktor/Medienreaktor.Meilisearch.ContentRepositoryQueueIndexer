@@ -1,5 +1,5 @@
 <?php
-namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer;
+namespace Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer;
 
 /*
  * This file is part of the Flowpack.ElasticSearch.ContentRepositoryQueueIndexer package.
@@ -12,8 +12,8 @@ namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer;
  */
 
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
-use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeDataRepository;
-use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Service\FakeNodeDataFactory;
+use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeDataRepository;
+use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Domain\Service\FakeNodeDataFactory;
 use Flowpack\JobQueue\Common\Job\JobInterface;
 use Neos\ContentRepository\Domain\Factory\NodeFactory;
 use Neos\ContentRepository\Domain\Service\ContextFactoryInterface;

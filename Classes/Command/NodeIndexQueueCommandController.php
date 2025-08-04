@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Command;
+namespace Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Command;
 
 /*
  * This file is part of the Flowpack.ElasticSearch.ContentRepositoryQueueIndexer package.
@@ -14,14 +14,16 @@ namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Command;
  */
 
 use Doctrine\Common\Collections\ArrayCollection;
+
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Driver\NodeTypeMappingBuilderInterface;
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception\ConfigurationException;
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
-use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeDataRepository;
-use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\IndexingJob;
-use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\LoggerTrait;
-use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\UpdateAliasJob;
 use Flowpack\ElasticSearch\Domain\Model\Mapping;
+
+use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeDataRepository;
+use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\IndexingJob;
+use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\LoggerTrait;
+//use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\UpdateAliasJob;
 use Flowpack\JobQueue\Common\Exception;
 use Flowpack\JobQueue\Common\Job\JobManager;
 use Flowpack\JobQueue\Common\Queue\QueueManager;
@@ -142,8 +144,8 @@ class NodeIndexQueueCommandController extends CommandController
 
         $combinations = new ArrayCollection($this->contentDimensionCombinator->getAllAllowedCombinations());
         $combinations->map(function (array $dimensionValues) use ($indexPostfix) {
-            $updateAliasJob = new UpdateAliasJob($indexPostfix, $dimensionValues);
-            $this->jobManager->queue(self::BATCH_QUEUE_NAME, $updateAliasJob);
+            //$updateAliasJob = new UpdateAliasJob($indexPostfix, $dimensionValues);
+            //$this->jobManager->queue(self::BATCH_QUEUE_NAME, $updateAliasJob);
         });
 
         $this->outputLine('Indexing jobs created for queue %s with success ...', [self::BATCH_QUEUE_NAME]);
