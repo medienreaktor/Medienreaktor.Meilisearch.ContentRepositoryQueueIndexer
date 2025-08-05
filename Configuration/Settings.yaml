@@ -3,7 +3,7 @@ Medienreaktor:
     ContentRepositoryQueueIndexer:
       enableLiveAsyncIndexing: true
       # Change size of single batch jobs via this setting
-      batchSize: 500
+      batchSize: 50
 
       # Number of failed jobs accepted to switch the alias to the new index
       # -1 means, accept any number of failures
@@ -17,12 +17,22 @@ Flowpack:
       queues:
         'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer':
           preset: 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer'
-
         'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer.Live':
           preset: 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer.Live'
-
+        # 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer':
+        #   preset: 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer'
+        #   options:
+        #     tableName: 'flowpack_jobqueue_QueueIndexer'
+        # 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer.Live':
+        #   preset: 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer.Live'
+        #   options:
+        #     tableName: 'flowpack_jobqueue_QueueIndexerLive'
       presets:
         'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer':
           className: 'Flowpack\JobQueue\Common\Queue\FakeQueue'
         'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer.Live':
           className: 'Flowpack\JobQueue\Common\Queue\FakeQueue'
+        # 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer':
+        #   className: 'Flowpack\JobQueue\Doctrine\Queue\DoctrineQueue'
+        # 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer.Live':
+        #   className: 'Flowpack\JobQueue\Doctrine\Queue\DoctrineQueue'

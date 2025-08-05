@@ -105,7 +105,7 @@ class NodeIndexQueueCommandController extends CommandController
      * @throws StopCommandException
      * @throws \Exception
      */
-    public function buildCommand(string $workspace = null): void
+    public function buildCommand(string $workspace = 'live'): void
     {
 
         $this->outputLine();
