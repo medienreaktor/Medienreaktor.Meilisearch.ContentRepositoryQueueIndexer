@@ -17,22 +17,14 @@ Flowpack:
       queues:
         'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer':
           preset: 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer'
+          options:
+            tableName: 'flowpack_jobqueue_QueueIndexer'
         'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer.Live':
           preset: 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer.Live'
-        # 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer':
-        #   preset: 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer'
-        #   options:
-        #     tableName: 'flowpack_jobqueue_QueueIndexer'
-        # 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer.Live':
-        #   preset: 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer.Live'
-        #   options:
-        #     tableName: 'flowpack_jobqueue_QueueIndexerLive'
+          options:
+            tableName: 'flowpack_jobqueue_QueueIndexerLive'
       presets:
         'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer':
-          className: 'Flowpack\JobQueue\Common\Queue\FakeQueue'
+          className: 'Flowpack\JobQueue\Doctrine\Queue\DoctrineQueue'
         'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer.Live':
-          className: 'Flowpack\JobQueue\Common\Queue\FakeQueue'
-        # 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer':
-        #   className: 'Flowpack\JobQueue\Doctrine\Queue\DoctrineQueue'
-        # 'Medienreaktor.Meilisearch.ContentRepositoryQueueIndexer.Live':
-        #   className: 'Flowpack\JobQueue\Doctrine\Queue\DoctrineQueue'
+          className: 'Flowpack\JobQueue\Doctrine\Queue\DoctrineQueue'
