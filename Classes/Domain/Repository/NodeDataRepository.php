@@ -36,13 +36,20 @@ class NodeDataRepository extends Repository
      * @param string $workspaceName
      * @param string|null $lastPersistenceObjectIdentifier
      * @param int $maxResults
+     * @param string|null $startNodePath Optional node path to start indexing from (includes child nodes)
+     * @param string|null $dimensionsHash Optional dimension hash to filter by specific language/dimension combination
      * @return IterableResult
      * @throws \Exception
      */
-    public function findAllBySiteAndWorkspace(string $workspaceName, string $lastPersistenceObjectIdentifier = null, int $maxResults = 1000): IterableResult
-    {
+    public function findAllBySiteAndWorkspace(
+        string $workspaceName,
+        string $lastPersistenceObjectIdentifier = null,
+        int $maxResults = 1000,
+        string $startNodePath = null,
+        string $dimensionsHash = null
+    ): IterableResult {
         $queryBuilder = $this->entityManager->createQueryBuilder();
-        $queryBuilder->select('n.Persistence_Object_Identifier persistenceObjectIdentifier, n.identifier identifier, n.dimensionValues dimensions, n.nodeType nodeType, n.path path')
+        $queryBuilder->select('n.Persistence_Object_Identifier persistenceObjectIdentifier, n.identifier identifier, n.dimensionsHash dimensions, n.nodeType nodeType, n.path path')
             ->from(NodeData::class, 'n')
             ->where('n.workspace = :workspace AND n.removed = :removed AND n.movedTo IS NULL')
             ->setMaxResults((integer)$maxResults)
@@ -54,6 +61,19 @@ class NodeDataRepository extends Repository
 
         if (!empty($lastPersistenceObjectIdentifier)) {
             $queryBuilder->andWhere($queryBuilder->expr()->gt('n.Persistence_Object_Identifier', $queryBuilder->expr()->literal($lastPersistenceObjectIdentifier)));
+        }
+
+        // Filter für Start-Node-Path und Child-Nodes
+        if ($startNodePath !== null) {
+            $queryBuilder
+            ->andWhere($queryBuilder->expr()->like('n.path', ':startNodePathLike'))
+            ->setParameter('startNodePathLike', $startNodePath . '%');
+        }
+
+        // Filter für Dimension Hash (spezifische Sprache/Dimension)
+        if ($dimensionsHash !== null) {
+            $queryBuilder->andWhere('n.dimensionsHash = :dimensionsHash')
+                ->setParameter('dimensionsHash', $dimensionsHash);
         }
 
         // $excludedNodeTypes = array_keys(array_filter($this->nodeTypeIndexingConfiguration->getIndexableConfiguration(), static function ($value) {

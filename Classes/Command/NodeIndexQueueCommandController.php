@@ -101,11 +101,13 @@ class NodeIndexQueueCommandController extends CommandController
      * Index all nodes by creating a new index and when everything was completed, switch the index alias.
      *
      * @param string $workspace
+     * @param string $startNodePath Optional node path to start indexing from (includes child nodes)
+     * @param string $dimensionsHash Optional dimension hash to filter by specific language/dimension combination
      * @throws Exception
      * @throws StopCommandException
      * @throws \Exception
      */
-    public function buildCommand(string $workspace = 'live'): void
+    public function buildCommand(string $workspace = 'live', string $startNodePath = null, string $dimensionsHash = null): void
     {
 
         $this->outputLine();
@@ -120,11 +122,11 @@ class NodeIndexQueueCommandController extends CommandController
             foreach ($this->workspaceRepository->findAll() as $workspace) {
                 $workspace = $workspace->getName();
                 $this->outputLine();
-                $this->indexWorkspace($workspace);
+                $this->indexWorkspace($workspace, $startNodePath, $dimensionsHash);
             }
         } else {
             $this->outputLine();
-            $this->indexWorkspace($workspace);
+            $this->indexWorkspace($workspace, $startNodePath, $dimensionsHash);
         }
 
         $this->outputLine('Indexing jobs created for queue %s with success ...', [self::BATCH_QUEUE_NAME]);
@@ -249,16 +251,35 @@ class NodeIndexQueueCommandController extends CommandController
 
     /**
      * @param string $workspaceName
+     * @param string $startNodePath Optional node path to start indexing from
+     * @param string $dimensionHash Optional dimension hash to filter by
      * @throws \Exception
      */
-    protected function indexWorkspace(string $workspaceName): void
+    protected function indexWorkspace(string $workspaceName, string $startNodePath = null, string $dimensionHash = null): void
     {
-        $this->outputLine('<info>++</info> Indexing %s workspace', [$workspaceName]);
+        $filterInfo = [];
+        if ($startNodePath !== null) {
+            $filterInfo[] = sprintf('starting from path "%s"', $startNodePath);
+        }
+        if ($dimensionHash !== null) {
+            $filterInfo[] = sprintf('dimension hash "%s"', $dimensionHash);
+        }
+
+        $filterText = empty($filterInfo) ? '' : ' (' . implode(', ', $filterInfo) . ')';
+        $this->outputLine('<info>++</info> Indexing %s workspace%s', [$workspaceName, $filterText]);
+
         $nodeCounter = 0;
         $offset = 0;
         $lastPersistenceObjectIdentifier = null;
+
         while (true) {
-            $iterator = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $lastPersistenceObjectIdentifier, $this->batchSize);
+            $iterator = $this->nodeDataRepository->findAllBySiteAndWorkspace(
+                $workspaceName,
+                $lastPersistenceObjectIdentifier,
+                $this->batchSize,
+                $startNodePath,
+                $dimensionHash
+            );
 
             $jobData = [];
 

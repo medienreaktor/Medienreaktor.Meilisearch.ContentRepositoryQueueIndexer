@@ -59,7 +59,18 @@ If you use the [doctrine](https://packagist.org/packages/flownative/jobqueue-doc
 
     flow nodeindexqueue:build --workspace live
 
-#### How to process indexing jobs
+Optional parameters:
+
+--start-node-path="/sites/yoursitename"
+Limit job creation to the given node path (the subtree starting at that node will be indexed).
+
+--dimensions-hash="e781f29c8dd927c09735547a848e3459"
+Restrict indexing to a single DimensionSpacePoint (e.g. a specific language / market combination). The hash must match an existing configured dimension combination.
+
+Combined example:
+
+flow nodeindexqueue:build --workspace live --start-node-path="/sites/yoursitename" --dimensions-hash="e781f29c8dd927c09735547a848e3459"
+
 
 You can use this CLI command to process indexing job:
 
