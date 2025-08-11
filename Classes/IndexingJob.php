@@ -62,7 +62,7 @@ class IndexingJob extends AbstractIndexingJob
                 continue;
             }
 
-            $this->nodeIndexer->indexNode($currentNode, $this->targetWorkspaceName);
+            $this->nodeIndexer->indexNode($currentNode, $this->targetWorkspaceName, false);
         }
 
         $this->nodeIndexer->flush();
