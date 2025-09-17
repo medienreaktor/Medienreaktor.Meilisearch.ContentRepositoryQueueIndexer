@@ -6,7 +6,7 @@
   "require": {
     "neos/flow": "^5.1 || ^6.0 || ^7.0 || ^8.0",
     "flowpack/jobqueue-common": "^3.0 || dev-master",
-    "medienreaktor/meilisearch": "^1.5"
+    "medienreaktor/meilisearch": "^2.0"
   },
   "autoload": {
     "psr-4": {

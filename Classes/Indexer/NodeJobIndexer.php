@@ -63,14 +63,14 @@ class NodeJobIndexer extends NodeIndexer
      * @param string|null $targetWorkspaceName In case indexing is triggered during publishing, a target workspace name will be passed in
      * @throws \Exception
      */
-    public function indexNode(NodeInterface $node, $targetWorkspaceName = null, $indexAllDimensions = true): void
+    public function indexNode(NodeInterface $node, $targetWorkspaceName = null, $indexAllDimensions = true, $indexFallbackDimensions = true): void
     {
         if( $node->isRemoved() ){
             $this->removeNode($node, $targetWorkspaceName);
             return;
         }
         if ($this->enableLiveAsyncIndexing !== true) {
-            parent::indexNode($node, $targetWorkspaceName, $indexAllDimensions);
+            parent::indexNode($node, $targetWorkspaceName, $indexAllDimensions, $indexFallbackDimensions);
 
             return;
         }
@@ -150,7 +150,7 @@ class NodeJobIndexer extends NodeIndexer
      * @param NodeInterface $node
      * @return array
      */
-    protected function nodeAsArray(NodeInterface $node): array
+    public function nodeAsArray(NodeInterface $node): array
     {
         return [
             [

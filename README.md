@@ -89,6 +89,9 @@ You can use this CLI command to process indexing job:
 
     flow nodeindexqueue:work --queue live
 
+## Create Jobs for changed nodes
+*/5 * * * * FLOW_CONTEXT=Production /var/www/flow nodeindexqueue:indexchangednodes --workspace=live --exit-after=120
+
 License
 -------
 

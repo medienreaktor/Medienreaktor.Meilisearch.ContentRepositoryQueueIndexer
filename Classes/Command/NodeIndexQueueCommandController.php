@@ -31,6 +31,12 @@ use Neos\Flow\Log\Utility\LogEnvironment;
 use Neos\Flow\Mvc\Exception\StopActionException;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
 use Neos\Utility\Files;
+use Neos\ContentRepository\Domain\Model\NodeInterface;
+use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Domain\Model\LastChecked;
+use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Domain\Repository\LastCheckedRepository;
+use Doctrine\DBAL\Connection;
+use Neos\ContentRepository\Domain\Service\ContextFactory;
+use Medienreaktor\Meilisearch\ContentRepositoryQueueIndexer\Domain\Service\DimensionsService;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -48,6 +54,24 @@ class NodeIndexQueueCommandController extends CommandController
      * @var LoggerInterface
      */
     protected $logger;
+
+    /**
+     * @Flow\Inject
+     * @var LastCheckedRepository
+     */
+    protected $lastCheckedResporistory;
+
+    /**
+     * @Flow\Inject
+     * @var Connection
+     */
+    protected $databaseConnection;
+
+    /**
+     * @Flow\Inject
+     * @var ContextFactory
+     */
+    protected $contextFactory;
 
     /**
      * @var JobManager
@@ -78,6 +102,12 @@ class NodeIndexQueueCommandController extends CommandController
      * @Flow\Inject
      */
     protected $workspaceRepository;
+
+    /**
+     * @var DimensionsService
+     * @Flow\Inject
+     */
+    protected $dimensionsService;
 
     /**
      * @var NodeIndexer
@@ -310,5 +340,170 @@ class NodeIndexQueueCommandController extends CommandController
         $this->outputLine();
         $this->outputLine("\nNumber of Nodes to be indexed in workspace '%s': %d", [$workspaceName, $nodeCounter]);
         $this->outputLine();
+    }
+
+    /**
+     * Übersetzt Nodes, die seit dem letzten Datum geändert wurden.
+     */
+    public function indexChangedNodesCommand(string $workspace = 'live', int $exitAfter = null): void
+    {
+        $startTime = time();
+        // Datum aus dem Modell abrufen
+        $lastChecked = $this->getLastCheckedDate();
+
+        if (!$lastChecked) {
+            $this->outputLine('Keine vorherigen Prüfungen gefunden. Verarbeite alle Nodes.');
+        } else {
+            $this->outputLine(sprintf('Prüfe Nodes, die seit %s geändert wurden.', $lastChecked->format('Y-m-d H:i:s')));
+        }
+
+        $currentDateTime = new \DateTime('now', new \DateTimeZone('Europe/Berlin'));
+
+        // Beispiel: Nodes abrufen, die seit dem Datum geändert wurden
+        $changedNodes = $this->getChangedNodesSince($workspace, $lastChecked);
+
+        if ($changedNodes === null) {
+            $this->outputLine('Fehler beim Abrufen der geänderten Nodes.');
+            $this->quit(1);
+        }
+
+        $this->outputLine(sprintf('Es wurden %d geänderte Nodes gefunden.', count($changedNodes)));
+
+        $alreadyAddedNodes = [];
+
+        // Index found nodes
+        foreach ($changedNodes as $key => $node) {
+
+            $fullTextRoot = $this->nodeIndexer->findFulltextRoot($node);
+
+            if ($fullTextRoot === null) {
+                $this->outputLine('Fehler beim Abrufen des Fulltext-Node.');
+                continue;
+            }
+
+            if (in_array($fullTextRoot->getIdentifier().'_'.$this->dimensionsService->hashByNode($fullTextRoot), $alreadyAddedNodes, true)) {
+                $this->outputLine('Node %s mit Dimension Hash %s wurde bereits zum Index hinzugefügt.', [$fullTextRoot->getIdentifier(), $this->dimensionsService->hashByNode($fullTextRoot)]);
+                // Node alreaedy added
+                continue;
+            }
+
+            $indexingJob = new IndexingJob($workspace, $this->nodeIndexer->nodeAsArray($fullTextRoot));
+            $this->jobManager->queue(self::LIVE_QUEUE_NAME, $indexingJob);
+            $alreadyAddedNodes[] = $fullTextRoot->getIdentifier().'_'.$this->dimensionsService->hashByNode($fullTextRoot);
+            $this->persistenceManager->persistAll();
+
+            // Check if the next node has a higher lastModificationDateTime
+            $nextNode = $changedNodes[$key + 1] ?? null;
+            if ($nextNode) {
+                if ($nextNode->getLastModificationDateTime() > $node->getLastModificationDateTime()) {
+                    $this->updateLastCheckedDate($node->getLastModificationDateTime());
+                    $this->outputLine('Alle Nodes bis zum Datum %s wurden verarbeitet. Das Datum wird aktualisiert.', [$node->getLastModificationDateTime()->format('Y-m-d H:i:s')]);
+                }
+            }
+            if ($exitAfter !== null && (time() - $startTime) >= $exitAfter) {
+                $this->outputLine('Quitting after %d seconds due to <i>--exit-after</i> flag', [time() - $startTime]);
+                $this->quit();
+            }
+        }
+
+        // Aktualisiere das Tracking-Datum im Modell
+        $this->updateLastCheckedDate($currentDateTime);
+
+        $this->outputLine('Indexing Jobs generiert.');
+    }
+
+    public function getChangedNodesSince(string $workspace = 'live', ?\DateTime $lastChecked = null): ?array
+    {
+        // Pseudo-Code für das Abrufen von Nodes, die seit `lastChecked` geändert wurden
+        if ($lastChecked === null) {
+            // Hole alle Nodes, wenn kein Datum gesetzt ist
+            $this->outputLine('Keine vorherigen Prüfungen gefunden. Erstes Cheked-Datum wird initialisiert.');
+            $this->updateLastCheckedDate(new \DateTime());
+            return null;
+        }
+
+       // Verbindung zur Datenbank herstellen
+        $connection = $this->databaseConnection;
+
+        // Basis-Query erstellen
+        $query = $connection->createQueryBuilder()
+            ->select('n.*') // Wähle alle Spalten oder spezifische, die benötigt werden
+            ->from('neos_contentrepository_domain_model_nodedata', 'n')
+            ->where('n.lastmodificationdatetime IS NOT NULL');
+
+        $query->andWhere('n.workspace = :workspace')->setParameter(':workspace', $workspace);
+        $query->orderBy('n.lastmodificationdatetime', 'ASC');
+        // Falls ein Datum übergeben wurde, füge die Bedingung hinzu
+        if ($lastChecked !== null) {
+            $query->andWhere('n.lastmodificationdatetime > :lastChecked')
+                ->setParameter(':lastChecked', $lastChecked->format('Y-m-d H:i:s'));
+        }
+
+        // Query ausführen
+        $result = $query->execute()->fetchAllAssociative();
+
+        // Nodes zurückgeben (Mapping von DB-Daten zu Node-Objekten)
+        $nodes = [];
+        foreach ($result as $row) {
+            $node = $this->mapDatabaseRowToNode($row);
+            if ($node !== null) {
+                $nodes[] = $node;
+            }
+        }
+
+        return $nodes;
+
+    }
+
+    protected function mapDatabaseRowToNode(array $row): ?NodeInterface
+    {
+        try {
+            $combinatons = ($this->contentDimensionCombinator->getAllAllowedCombinations());
+            $dimensionvalues = json_decode($row['dimensionvalues'], true);
+            $combinations = array_filter($combinatons, function($combination) use ($dimensionvalues){
+                return $combination["language"][0] == $dimensionvalues['language'][0];
+            });
+            $dimensions = array_values($combinations)[0];
+            $context = $this->contextFactory->create([
+                'workspaceName' => $row['workspace'],
+                'dimensions' => $dimensions,
+                'targetDimensions' => array(
+                    'language' => $dimensions['language'][0],
+                ),
+                'invisibleContentShown' => true,
+                'removedContentShown' => true,
+                'inaccessibleContentShown' => true
+            ]);
+
+            return $context->getNodeByIdentifier($row['identifier']);
+        } catch (\Exception $e) {
+            // Fehler beim Mapping behandeln
+            $this->logger->error(sprintf(
+                'Fehler beim Mapping der Node-Daten für ID "%s": %s',
+                $row['identifier'],
+                $e->getMessage()
+            ));
+            return null;
+        }
+    }
+
+    public function getLastCheckedDate(): ?\DateTime
+    {
+        $lastCheckedEntry = $this->lastCheckedResporistory->findFirst();
+        return $lastCheckedEntry ? $lastCheckedEntry->getLastChecked() : null;
+    }
+
+    protected function updateLastCheckedDate(\DateTime $dateTime): void
+    {
+        $lastCheckedEntry = $this->lastCheckedResporistory->findFirst();
+        if (!$lastCheckedEntry) {
+            $lastCheckedEntry = new LastChecked();
+            $lastCheckedEntry->setLastChecked($dateTime);
+            $this->persistenceManager->add($lastCheckedEntry);
+        } else {
+            $lastCheckedEntry->setLastChecked($dateTime);
+            $this->persistenceManager->update($lastCheckedEntry);
+        }
+        $this->persistenceManager->persistAll();
     }
 }

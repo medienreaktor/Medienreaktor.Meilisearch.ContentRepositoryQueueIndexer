@@ -62,7 +62,8 @@ class IndexingJob extends AbstractIndexingJob
                 continue;
             }
 
-            $this->nodeIndexer->indexNode($currentNode, $this->targetWorkspaceName, false);
+            // index only the changed variants, not all dimensions
+            $this->nodeIndexer->indexNode($currentNode, $this->targetWorkspaceName, false, true);
         }
 
         $this->nodeIndexer->flush();
