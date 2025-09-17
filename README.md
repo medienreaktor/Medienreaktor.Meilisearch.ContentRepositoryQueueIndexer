@@ -89,8 +89,26 @@ You can use this CLI command to process indexing job:
 
     flow nodeindexqueue:work --queue live
 
-## Create Jobs for changed nodes
+## Live Indexing via DB
+
+You have to run doctringe:migrate in order to create a lastChecked-Entry in the DB.
+Then you can enable async indexing via db by editing ```Settings.yaml```:
+
+    Medienreaktor:
+      Meilisearch:
+        ContentRepositoryQueueIndexer:
+          enableAsyncDBIndexing: true
+          enableLiveAsyncIndexing: false
+
+You can use this CLI command to generate indexing job:
+
+    flow nodeindexqueue:indexchangednodes --workspace=live --exit-after=120
+
+### Create Jobs for changed nodes
+You should use a cronjob like this, for working:
+
 */5 * * * * FLOW_CONTEXT=Production /var/www/flow nodeindexqueue:indexchangednodes --workspace=live --exit-after=120
+*/5 * * * * FLOW_CONTEXT=Production /var/www/flow nodeindexqueue:work --queue live --exit-after=120 --verbose=0
 
 License
 -------

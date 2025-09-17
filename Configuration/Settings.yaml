@@ -2,6 +2,8 @@ Medienreaktor:
   Meilisearch:
     ContentRepositoryQueueIndexer:
       enableLiveAsyncIndexing: true
+      # Switch to enable async indexing via DB instead of direct indexing see Readme
+      enableAsyncDBIndexing: false
       # Change size of single batch jobs via this setting
       batchSize: 50
 

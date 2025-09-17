@@ -53,6 +53,12 @@ class NodeJobIndexer extends NodeIndexer
     protected $enableLiveAsyncIndexing;
 
     /**
+     * @var bool
+     * @Flow\InjectConfiguration(path="enableAsyncDBIndexing")
+     */
+    protected $enableAsyncDBIndexing;
+
+    /**
      * @var DimensionsService
      * @Flow\Inject
      */
@@ -67,6 +73,9 @@ class NodeJobIndexer extends NodeIndexer
     {
         if( $node->isRemoved() ){
             $this->removeNode($node, $targetWorkspaceName);
+            return;
+        }
+        if ($this->enableAsyncDBIndexing === true) {
             return;
         }
         if ($this->enableLiveAsyncIndexing !== true) {
