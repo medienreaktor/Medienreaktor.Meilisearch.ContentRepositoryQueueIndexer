@@ -18,6 +18,7 @@ use Doctrine\ORM\Internal\Hydration\IterableResult;
 use Neos\ContentRepository\Domain\Model\NodeData;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Persistence\Repository;
+use Neos\ContentRepository\Domain\Service\NodeTypeManager;
 
 /**
  * @Flow\Scope("singleton")
@@ -31,6 +32,12 @@ class NodeDataRepository extends Repository
      * @var EntityManagerInterface
      */
     protected $entityManager;
+
+    /**
+     * @Flow\Inject
+     * @var NodeTypeManager
+     */
+    protected $nodeTypeManager;
 
     /**
      * @param string $workspaceName
@@ -84,6 +91,13 @@ class NodeDataRepository extends Repository
         //     $queryBuilder->andWhere($queryBuilder->expr()->notIn('n.nodeType', $excludedNodeTypes));
         // }
 
+        // Only fulltext Nodes
+        $fulltextRootNodeTypes = $this->getFulltextRootNodeTypes();
+        if (!empty($fulltextRootNodeTypes)) {
+            $queryBuilder->andWhere($queryBuilder->expr()->in('n.nodeType', ':fulltextRootNodeTypes'))
+                ->setParameter('fulltextRootNodeTypes', $fulltextRootNodeTypes);
+        }
+
         return $queryBuilder->getQuery()->iterate();
     }
 
@@ -109,4 +123,28 @@ class NodeDataRepository extends Repository
             $iteration++;
         }
     }
+
+    /**
+     * Liefert eine Liste der NodeTypes, deren Konfiguration fulltext: true gesetzt hat.
+     * @return array<int,string>
+     */
+    protected function getFulltextRootNodeTypes(): array
+    {
+        static $cache = null;
+        if ($cache !== null) {
+            return $cache;
+        }
+        $fulltext = [];
+        $allNodeTypes = $this->nodeTypeManager->getNodeTypes(false);
+        foreach ($allNodeTypes as $nodeTypeName => $nodeType) {
+            $configuration = $nodeType->getFullConfiguration();
+            if (isset($configuration['search']['fulltext']['isRoot']) && $configuration['search']['fulltext']['isRoot'] === true) {
+                $fulltext[] = $nodeTypeName;
+            }
+        }
+        $cache = $fulltext;
+        return $cache;
+    }
+
+
 }
